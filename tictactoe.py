@@ -37,11 +37,13 @@ class Agent():
 		self.aid = aid
 		self.mean = 0
 		self.count = 1
+		self.learning_rate = 0.01
 		self.statesTaken = []
 		self.values = {}
 
 	def take_action(self, env):
 		"""take action based on egreedy method """
+		self.count += 1
 		maxValue = 0
 		selectedAction = None
 		possibleNextStates = env.possible_next_states(self.aid)
@@ -92,10 +94,9 @@ class Agent():
 	
 	def update(self, env):
 		"""update states backward """
-		self.count += 1.0
-		
+				
 		for state, nextState in zip(self.statesTaken[:-1][::-1], self.statesTaken[1:][::-1]):
-			self.values[state] += 1/self.count * (self.values[state] - self.values[nextState])
+			self.values[state] += learning_rate * (self.values[state] - self.values[nextState])
 
 
 
@@ -129,15 +130,16 @@ class Eviroment():
 			return 0
 
 	def possible_next_states(self, aid):
+		"""gives information about the next states for the agent """
 		tempState = list(self.actualState)
 		tempState2 = tempState
-		count = 0
+		action = 0
 		for pos, word in enum(tempState):
 			if word == '0':
 				tempState2[pos] = str(aid)
-				self.possible_next_states[count] = ''.join(tempState2)
+				self.possible_next_states[action] = ''.join(tempState2)
 				tempState2 = tempState
-				count += 1
+				action += 1
 		return self.possible_next_states		
 
 		
