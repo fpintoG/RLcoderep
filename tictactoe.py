@@ -36,7 +36,7 @@ class Agent():
 	def __init__(self, aid):
 		self.aid = aid
 		self.mean = 0
-		self.count = 0
+		self.count = 1
 		self.statesTaken = []
 		self.values = {}
 
@@ -44,18 +44,18 @@ class Agent():
 		"""take action based on egreedy method """
 		maxValue = 0
 		selectedAction = None
-		possibleNextStates = np.random.shuffle(env.possible_next_states())
+		possibleNextStates = env.possible_next_states(self.aid)
 		
 		if 1/self.count > np.random.rand():
-			selectedAction, randState = possibleNextStates
+			selectedAction, randState = np.random.choice(list(possibleNextStates.items()))
 		else:	
-			for action, nextState in possibleNextStates:
+			for action, nextState in possibleNextStates.items():
 				value = self.values[nextState]
 				if value > maxValue:
 					maxValue = value
 					selectedAction = action
 		
-		env.perform_action(selectedAction)
+		env.perform_action(self.aid, selectedAction)
 		
 
 	def find_final_state(self, state):
@@ -102,10 +102,13 @@ class Agent():
 class Eviroment():
 	"""game class """
 	def __init__(self):
-		self.actualState = None
-
+		self.actualState = "000000000"
+		self.possible_next_states = {}
 
 	def game_over(self):
+		"""define the end of the game, also reset the next possible states
+		every turn to get the new possible states """
+		self.possible_next_states = {}
 		tempState = np.fromstring(self.actualState, np.int8) - 48
 		tempState = np.reshape((3, 3))
 
@@ -125,10 +128,23 @@ class Eviroment():
 		else:
 			return 0
 
-	def possible_next_states(self):
+	def possible_next_states(self, aid):
+		tempState = list(self.actualState)
+		tempState2 = tempState
+		count = 0
+		for pos, word in enum(tempState):
+			if word == '0':
+				tempState2[pos] = str(aid)
+				self.possible_next_states[count] = ''.join(tempState2)
+				tempState2 = tempState
+				count += 1
+		return self.possible_next_states		
+
 		
 
 	def perform_action(self, action):
+		"""implement selected state """
+		self.actualState = self.possible_next_states[action]
 				
 
 
