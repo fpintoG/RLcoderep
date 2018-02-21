@@ -1,4 +1,4 @@
-def play_game(p1, p2, env, draw=False):
+def play_game(p1, p2, env, ep, draw=False):
 	current_player = None
 	while not env.game_over():
 		#alternate players	
@@ -7,7 +7,7 @@ def play_game(p1, p2, env, draw=False):
 		else:
 			current_player = p1
 		
-		#not sure what representation ill use
+		
 		if draw:
 			if draw == 1 and current_player == p1:
 				env.draw_board()
@@ -30,6 +30,15 @@ def play_game(p1, p2, env, draw=False):
 		p1.update()
 		p2.update()	
 
+	gameState = env.game_over()
+	print("---------------------------------------------------------")
+	if gameState == 1:
+		print("End of episode: " + ep + ", player 1 wins")
+	elif gameState == 2:
+		print("End of episode: " + ep + ", player 2 wins")
+	else:
+		print("End of episode: " + ep + ", draw end")	  		
+	print("----------------------------------------------------------")	
 
 class Agent():
 
@@ -143,10 +152,17 @@ class Eviroment():
 		return self.possible_next_states		
 
 		
-
 	def perform_action(self, action):
 		"""implement selected state """
-		self.actualState = self.possible_next_states[action]
+		nextState = self.possible_next_states[action]
+		print(nextState)
+		self.actualState = nextState
+
+	def get_state():
+		return self.actualState 
+
+	def draw_board():
+		"""not implemented yet """		
 				
 
 
