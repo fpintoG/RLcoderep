@@ -1,6 +1,10 @@
+import numpy as np
+import random
 def play_game(p1, p2, env, ep, draw=False):
-	current_player = None
-	while not env.game_over():
+	current_player = None 
+	# random.choice((p1, p2))
+	gameState = 0
+	while not gameState:
 		#alternate players	
 		if current_player == p1:
 			current_player = p2
@@ -30,14 +34,15 @@ def play_game(p1, p2, env, ep, draw=False):
 		p1.update()
 		p2.update()	
 
-	gameState = env.game_over()
-	print("---------------------------------------------------------")
+		gameState = env.game_over()
+
+	print("----------------------------------------------------------")
 	if gameState == 1:
-		print("End of episode: " + ep + ", player 1 wins")
+		print("End of episode: " + str(ep) + ", player 1 wins")
 	elif gameState == 2:
-		print("End of episode: " + ep + ", player 2 wins")
+		print("End of episode: " + str(ep) + ", player 2 wins")
 	else:
-		print("End of episode: " + ep + ", draw end")	  		
+		print("End of episode: " + str(ep) + ", draw end")	  		
 	print("----------------------------------------------------------")	
 
 class Agent():
@@ -52,27 +57,30 @@ class Agent():
 
 	def take_action(self, env):
 		"""take action based on egreedy method """
-		self.count += 1
-		maxValue = 0
-		selectedAction = None
-		possibleNextStates = env.possible_next_states(self.aid)
+		self.count += 1.0
+		actionValue = []
+		possibleNextStates = env.get_next_states(self.aid)
 		
-		if 1/self.count > np.random.rand():
-			selectedAction, randState = np.random.choice(list(possibleNextStates.items()))
+		if 1.0/self.count > np.random.rand():
+			selectedAction, randState = random.choice(list(possibleNextStates.items()))
 		else:	
 			for action, nextState in possibleNextStates.items():
+				findFinalState = self.find_final_state(nextState)
+				self.is_state_in_values(findFinalState, nextState)
 				value = self.values[nextState]
-				if value > maxValue:
-					maxValue = value
-					selectedAction = action
+				actionValue.append((value, action))
+			selectedAction = max(actionValue)[1]	
+				# if value > maxValue:
+				# 	maxValue = value
+				# 	selectedAction = action
 		
-		env.perform_action(self.aid, selectedAction)
+		env.perform_action(selectedAction)
 		
 
 	def find_final_state(self, state):
 		"""detect a final state and the type of it """
 		tempState = np.fromstring(state, np.int8) - 48
-		tempState = np.reshape((3, 3))
+		tempState = tempState.reshape((3, 3))
 
 		if ((tempState == 1).all(0).any() or 
 			(tempState == 1).all(1).any() or 
@@ -84,6 +92,8 @@ class Agent():
 			(tempState == 2).diagonal().all() or 
 			np.rot90((tempState == 2)).diagonal().all()):	
 			return 2
+		elif tempState.all():
+			return 3	
 		else:
 			return 0	
 
@@ -91,21 +101,27 @@ class Agent():
 		""" add states taken to state history """
 		self.statesTaken.append(state)
 		findFinalState = self.find_final_state(state)
+		self.is_state_in_values(findFinalState, state)
 
+	def is_state_in_values(self, findFinalState, state):	
 		if state not in self.values:
 			if findFinalState == self.aid:
 				self.values[state] = 1
-			elif findFinalState != 0 and findFinalState != self.aid:
+			elif (findFinalState != 0 and 
+				findFinalState != self.aid and 
+				findFinalState != 3):
+				self.values[state] = -1
+			elif findFinalState == 3:
 				self.values[state] = 0
 			else:	
 				self.values[state] = 0.5
 			
 	
-	def update(self, env):
+	def update(self):
 		"""update states backward """
 				
 		for state, nextState in zip(self.statesTaken[:-1][::-1], self.statesTaken[1:][::-1]):
-			self.values[state] += learning_rate * (self.values[state] - self.values[nextState])
+			self.values[state] += self.learning_rate * (self.values[state] - self.values[nextState])
 
 
 
@@ -120,35 +136,40 @@ class Eviroment():
 		every turn to get the new possible states """
 		self.possible_next_states = {}
 		tempState = np.fromstring(self.actualState, np.int8) - 48
-		tempState = np.reshape((3, 3))
+		tempState = tempState.reshape((3, 3))
+		
 
 		if ((tempState == 1).all(0).any() or 
 			(tempState == 1).all(1).any() or 
 			(tempState == 1).diagonal().all() or 
 			np.rot90((tempState == 1)).diagonal().all()):
+			self.actualState = "000000000"
 			return 1
 		elif ((tempState == 2).all(0).any() or 
 			(tempState == 2).all(1).any() or 
 			(tempState == 2).diagonal().all() or 
 			np.rot90((tempState == 2)).diagonal().all()):	
+			self.actualState = "000000000"
 			return 2
 		elif tempState.all():
+			self.actualState = "000000000"
 			return 3	
 		
 		else:
 			return 0
 
-	def possible_next_states(self, aid):
+	def get_next_states(self, aid):
 		"""gives information about the next states for the agent """
 		tempState = list(self.actualState)
-		tempState2 = tempState
+		tempState2 = list(tempState)
 		action = 0
-		for pos, word in enum(tempState):
+		for pos, word in enumerate(self.actualState):
 			if word == '0':
 				tempState2[pos] = str(aid)
 				self.possible_next_states[action] = ''.join(tempState2)
-				tempState2 = tempState
+				tempState2 = list(tempState)
 				action += 1
+		
 		return self.possible_next_states		
 
 		
@@ -158,13 +179,21 @@ class Eviroment():
 		print(nextState)
 		self.actualState = nextState
 
-	def get_state():
+	def get_state(self):
 		return self.actualState 
 
-	def draw_board():
+	def draw_board(self):
 		"""not implemented yet """		
 				
 
 
 
+if __name__ == "__main__":
 
+	env = Eviroment()
+	player1 = Agent(1)
+	player2 = Agent(2)
+
+	for i in range(10000):
+
+		play_game(player1, player2, env, i)
