@@ -30,11 +30,14 @@ def play_game(p1, p2, env, ep, draw=False):
 		if draw:
 			env.draw_board()
 
-		#do the value function update	
-		p1.update()
-		p2.update()	
-
+		#get final game state 
 		gameState = env.game_over()
+			
+		#do the value function update	
+		p1.update(gameState)
+		p2.update(gameState)	
+
+		
 
 	print("----------------------------------------------------------")
 	if gameState == 1:
@@ -70,9 +73,6 @@ class Agent():
 				value = self.values[nextState]
 				actionValue.append((value, action))
 			selectedAction = max(actionValue)[1]	
-				# if value > maxValue:
-				# 	maxValue = value
-				# 	selectedAction = action
 		
 		env.perform_action(selectedAction)
 		
@@ -117,11 +117,11 @@ class Agent():
 				self.values[state] = 0.5
 			
 	
-	def update(self):
-		"""update states backward """
-				
-		for state, nextState in zip(self.statesTaken[:-1][::-1], self.statesTaken[1:][::-1]):
-			self.values[state] += self.learning_rate * (self.values[state] - self.values[nextState])
+	def update(self, gameState):
+		"""update states backward just and the end of an episode """
+		if gameState:		
+			for state, nextState in zip(self.statesTaken[:-1][::-1], self.statesTaken[1:][::-1]):
+				self.values[state] += self.learning_rate * (self.values[state] - self.values[nextState])
 
 
 
