@@ -53,18 +53,20 @@ class Agent():
 	def __init__(self, aid):
 		self.aid = aid
 		self.mean = 0
-		self.count = 1
-		self.learning_rate = 0.01
+		self.eps = 0.1
+		self.learning_rate = 0.5
 		self.statesTaken = []
 		self.values = {}
 
 	def take_action(self, env):
 		"""take action based on egreedy method """
-		self.count += 1.0
+		#self.count += 1.0
 		actionValue = []
 		possibleNextStates = env.get_next_states(self.aid)
 		
-		if 1.0/self.count > np.random.rand():
+#		if 1.0/self.count > np.random.rand():
+		#get better exploration
+		if self.eps > np.random.rand():	
 			selectedAction, randState = random.choice(list(possibleNextStates.items()))
 		else:	
 			for action, nextState in possibleNextStates.items():
