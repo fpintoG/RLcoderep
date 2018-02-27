@@ -50,13 +50,14 @@ def play_game(p1, p2, env, ep, draw=False):
 
 class Agent():
 
-	def __init__(self, aid):
+	def __init__(self, aid, train = True):
 		self.aid = aid
 		self.mean = 0
 		self.eps = 0.1
 		self.learning_rate = 0.5
 		self.statesTaken = []
 		self.values = {}
+		self.train = train
 
 	def take_action(self, env):
 		"""take action based on egreedy method """
@@ -66,7 +67,7 @@ class Agent():
 		
 #		if 1.0/self.count > np.random.rand():
 		#get better exploration
-		if self.eps > np.random.rand():	
+		if ((self.eps > np.random.rand()) and self.train):	
 			selectedAction, randState = random.choice(list(possibleNextStates.items()))
 		else:	
 			for action, nextState in possibleNextStates.items():
@@ -181,14 +182,27 @@ class Eviroment():
 		print(nextState)
 		self.actualState = nextState
 
+	def perform_human_action(self, nextState):
+		print(nextState)
+		self.actualState = nextState	
+
 	def get_state(self):
 		return self.actualState 
 
 	def draw_board(self):
 		"""not implemented yet """		
 				
+#make human agent
+class Human():
+	"""human agent to play against the trained AI """
+	def __init__(self, aid = 2):
+		self.aid = aid
 
-
+	def make_move(self, env, posX, posY):
+		state = list(env.get_state())
+		state[posX * 3 + posY] = str(self.aid)
+		state = ''.join(state)	
+		env.perform_human_action(state)
 
 if __name__ == "__main__":
 
@@ -196,6 +210,11 @@ if __name__ == "__main__":
 	player1 = Agent(1)
 	player2 = Agent(2)
 
-	for i in range(10000):
+	for i in range(100000):
 
 		play_game(player1, player2, env, i)
+
+
+
+
+			
